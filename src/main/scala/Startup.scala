@@ -1,12 +1,10 @@
-import java.util.concurrent.Executors
-
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.{ChannelHandlerContext, ChannelInitializer, SimpleChannelInboundHandler}
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.handler.codec.http.websocketx.{TextWebSocketFrame, WebSocketFrame, WebSocketServerProtocolHandler}
+import io.netty.channel.{ChannelHandlerContext, ChannelInitializer, SimpleChannelInboundHandler}
 import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketServerCompressionHandler
+import io.netty.handler.codec.http.websocketx.{TextWebSocketFrame, WebSocketFrame, WebSocketServerProtocolHandler}
 import io.netty.handler.codec.http.{HttpObjectAggregator, HttpServerCodec}
 import io.netty.handler.logging.{LogLevel, LoggingHandler}
 
@@ -34,10 +32,9 @@ object Startup {
 
 class WebSocketServerInitializer extends ChannelInitializer[SocketChannel] {
 
-  private val WEB_SOCKET_PATH = "/ws"
+  private val WEB_SOCKET_PATH = "/jianghu"
 
-  @Override
-  def initChannel(ch: SocketChannel) {
+  override def initChannel(ch: SocketChannel): Unit = {
     val pipeline = ch.pipeline()
     pipeline.addLast(new HttpServerCodec())
     pipeline.addLast(new HttpObjectAggregator(65536))
@@ -48,18 +45,7 @@ class WebSocketServerInitializer extends ChannelInitializer[SocketChannel] {
 }
 
 class WebSocketDataHandler extends SimpleChannelInboundHandler[WebSocketFrame] {
-
-  val threadPool = Executors.newCachedThreadPool()
-
-  @Override
-  def channelRead0(ctx: ChannelHandlerContext, webSocketFrame: WebSocketFrame) {
-    if (webSocketFrame.isInstanceOf[TextWebSocketFrame]) {
-      //      val gson = new Gson();
-      //threadPool.execute(new GameWork(ctx, gson.fromJson(((TextWebSocketFrame) webSocketFrame).text(), JsonObject.class) ) );
-      //            ctx.fireChannelRead();
-    } else {
-      val message = "unsupported frame type: " + classOf[WebSocketFrame].getName
-      throw new UnsupportedOperationException(message)
-    }
+  override def channelRead0(ctx: ChannelHandlerContext, webSocketFrame: WebSocketFrame): Unit = {
+    ctx.writeAndFlush(new TextWebSocketFrame("ok"))
   }
 }
