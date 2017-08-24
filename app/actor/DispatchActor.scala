@@ -1,6 +1,9 @@
 package actor
 
+import java.util
+
 import akka.actor.{Actor, Props}
+import com.google.gson.Gson
 import db.DBUtil
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
@@ -19,14 +22,14 @@ class DispatchActor extends Actor {
 
 case class WorkerActor(ctx: ChannelHandlerContext) extends Actor {
 
-  import org.json4s.JsonDSL._
-  import org.json4s.jackson.JsonMethods._
-
   override def receive: Receive = {
     case data: String => {
       val scene = DBUtil.getSceneById(1L)
       val sceneCell = DBUtil.getSceneCellBySceneId(1L)
-      ctx.writeAndFlush(new TextWebSocketFrame(compact(render(("name" -> scene.values("name").toString) ~ ("cells" -> sceneCell)))))
+      val result = new util.HashMap[String, Any]()
+      result.put("name", scene.get("name"))
+      result.put("cells", sceneCell)
+      ctx.writeAndFlush(new TextWebSocketFrame(new Gson().toJson(result)))
     }
   }
 }
