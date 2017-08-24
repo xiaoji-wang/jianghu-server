@@ -2,7 +2,6 @@ package db
 
 import java.sql.{Connection, DriverManager}
 import java.util
-import java.util.Comparator
 
 import com.typesafe.config.ConfigFactory
 
