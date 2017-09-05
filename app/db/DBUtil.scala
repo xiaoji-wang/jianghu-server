@@ -53,6 +53,7 @@ object DBUtil {
           temp = map.get(id)
         } else {
           temp.put("name", rs.getString("name"))
+          temp.put("desc", rs.getString("desc"))
           val axisPoint = new java.util.HashMap[String, Any]()
           axisPoint.put("x", rs.getInt("x"))
           axisPoint.put("y", rs.getInt("y"))
