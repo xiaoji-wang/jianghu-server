@@ -1,7 +1,6 @@
 package db
 
 import java.sql.{Connection, DriverManager}
-import java.util
 
 import com.typesafe.config.ConfigFactory
 
@@ -21,7 +20,7 @@ object DBUtil {
   def getSceneById(sceneId: Long): java.util.Map[String, Any] = {
     val conn = DBUtil.getConnection
     try {
-      val result = new util.HashMap[String, Any]()
+      val result = new java.util.HashMap[String, Any]()
       val ps = conn.prepareStatement("select * from jh_scene where scene_id=?")
       ps.setLong(1, sceneId)
       val rs = ps.executeQuery()
@@ -34,7 +33,7 @@ object DBUtil {
     }
   }
 
-  def getSceneCellBySceneId(sceneId: Long): util.Collection[util.HashMap[String, Any]] = {
+  def getSceneCellBySceneId(sceneId: Long): java.util.Collection[java.util.HashMap[String, Any]] = {
     val conn = DBUtil.getConnection
     try {
       val sb = new StringBuilder(100);
@@ -74,6 +73,22 @@ object DBUtil {
       map.values()
     } finally {
       conn.close()
+    }
+  }
+
+  def getCharacterById(id: Long): java.util.HashMap[String, Any] = {
+    val conn = DBUtil.getConnection
+    try {
+      val ps = conn.prepareStatement("select * from jh_character where character_id=?")
+      ps.setLong(1, id)
+      val rs = ps.executeQuery()
+      val map = new java.util.HashMap[String, Any]()
+      if (rs.next()) {
+        map.put("id", rs.getLong("character_id"))
+        map.put("name", rs.getString("name"))
+        map.put("desc", rs.getString("desc"))
+      }
+      map
     }
   }
 }
