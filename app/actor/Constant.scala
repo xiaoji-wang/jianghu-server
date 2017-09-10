@@ -6,4 +6,5 @@ package actor
 object Constant {
   val GET_MAP = 1
   val NPC_SELECTED = 2
+  val NPC_TALK = 3
 }

@@ -34,6 +34,9 @@ case class WorkerActor(ctx: ChannelHandlerContext) extends Actor {
       case Constant.NPC_SELECTED => {
         ctx.writeAndFlush(new TextWebSocketFrame(new Gson().toJson(DBUtil.getCharacterById(data._2.get("id").getAsInt))))
       }
+      case Constant.NPC_TALK => {
+        ctx.writeAndFlush(new TextWebSocketFrame(new Gson().toJson(DBUtil.getCharacterWord(data._2.get("id").getAsInt))))
+      }
     }
     case _ => ctx.writeAndFlush(new TextWebSocketFrame(""))
   }

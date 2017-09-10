@@ -90,6 +90,24 @@ object DBUtil {
         map.put("desc", rs.getString("desc"))
       }
       map
+    } finally {
+      conn.close()
     }
+  }
+
+  def getCharacterWord(id: Int): java.util.HashMap[String, String] = {
+    val conn = DBUtil.getConnection
+    val map = new java.util.HashMap[String, String]()
+    try {
+      val ps = conn.prepareStatement("select * from jh_character_word where character_id=? order by rand() limit 1")
+      ps.setLong(1, id)
+      val rs = ps.executeQuery()
+      if (rs.next()) {
+        map.put("word", rs.getString("word"))
+      }
+    } finally {
+      conn.close()
+    }
+    map
   }
 }
