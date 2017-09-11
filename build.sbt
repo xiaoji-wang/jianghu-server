@@ -16,11 +16,8 @@ libraryDependencies += "io.netty" % "netty-all" % "4.1.14.Final"
 // https://mvnrepository.com/artifact/mysql/mysql-connector-java
 libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.36"
 
-//// https://mvnrepository.com/artifact/org.json4s/json4s-native_2.11
-//libraryDependencies += "org.json4s" % "json4s-native_2.11" % "3.5.3"
-//
-//// https://mvnrepository.com/artifact/org.json4s/json4s-jackson_2.11
-//libraryDependencies += "org.json4s" % "json4s-jackson_2.11" % "3.5.3"
+// https://mvnrepository.com/artifact/org.jooq/jooq
+libraryDependencies += "org.jooq" % "jooq" % "3.9.5"
 
 // https://mvnrepository.com/artifact/com.google.code.gson/gson
 libraryDependencies += "com.google.code.gson" % "gson" % "2.8.1"

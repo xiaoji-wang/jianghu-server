@@ -1,8 +1,11 @@
 package db
 
 import java.sql.{Connection, DriverManager}
+import java.util
 
 import com.typesafe.config.ConfigFactory
+import org.jooq.SQLDialect
+import org.jooq.impl.DSL
 
 /**
   * Created by wxji on 2017-08-14.
@@ -77,23 +80,38 @@ object DBUtil {
     }
   }
 
-  def getCharacterById(id: Long): java.util.HashMap[String, Any] = {
+  def getCharacterById(id: Long): util.Map[String, AnyRef] = {
     val conn = DBUtil.getConnection
     try {
-      val ps = conn.prepareStatement("select * from jh_character where character_id=?")
-      ps.setLong(1, id)
-      val rs = ps.executeQuery()
-      val map = new java.util.HashMap[String, Any]()
-      if (rs.next()) {
-        map.put("id", rs.getLong("character_id"))
-        map.put("name", rs.getString("name"))
-        map.put("desc", rs.getString("desc"))
-      }
+      val map = DSL.using(conn, SQLDialect.MYSQL)
+        .select()
+        .from("jh_character")
+        .where("character_id=" + id)
+        .fetchOneMap()
+      map.put("id", map.get("character_id"))
       map
     } finally {
       conn.close()
     }
   }
+
+  //  def getCharacterById(id: Long): java.util.HashMap[String, Any] = {
+  //    val conn = DBUtil.getConnection
+  //    try {
+  //      val ps = conn.prepareStatement("select * from jh_character where character_id=?")
+  //      ps.setLong(1, id)
+  //      val rs = ps.executeQuery()
+  //      val map = new java.util.HashMap[String, Any]()
+  //      if (rs.next()) {
+  //        map.put("id", rs.getLong("character_id"))
+  //        map.put("name", rs.getString("name"))
+  //        map.put("desc", rs.getString("desc"))
+  //      }
+  //      map
+  //    } finally {
+  //      conn.close()
+  //    }
+  //  }
 
   def getCharacterWord(id: Int): java.util.HashMap[String, String] = {
     val conn = DBUtil.getConnection
