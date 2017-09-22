@@ -2,10 +2,12 @@ package db
 
 import java.sql.{Connection, DriverManager}
 import java.util
+import java.util.concurrent.ConcurrentHashMap
 
 import com.typesafe.config.ConfigFactory
-import org.jooq.SQLDialect
-import org.jooq.impl.DSL
+import org.apache.commons.dbutils.QueryRunner
+import org.apache.commons.dbutils.handlers.{MapHandler, MapListHandler}
+
 
 /**
   * Created by wxji on 2017-08-14.
@@ -13,6 +15,9 @@ import org.jooq.impl.DSL
 object DBUtil {
 
   private val config = ConfigFactory.load("application.conf").getConfig("db.default")
+  private val sceneCache = new ConcurrentHashMap[Long, util.Map[String, AnyRef]]()
+  private val sceneCellCache = new ConcurrentHashMap[Long, util.List[util.Map[String, AnyRef]]]()
+  private val characterCache = new ConcurrentHashMap[Long, util.List[util.Map[String, AnyRef]]]()
 
   Class.forName(config.getString("driver"))
 
@@ -20,112 +25,42 @@ object DBUtil {
     DriverManager.getConnection(config.getString("url"), config.getString("username"), config.getString("password"))
   }
 
-  def getSceneById(sceneId: Long): java.util.Map[String, Any] = {
-    val conn = DBUtil.getConnection
-    try {
-      val result = new java.util.HashMap[String, Any]()
-      val ps = conn.prepareStatement("select * from jh_scene where scene_id=?")
-      ps.setLong(1, sceneId)
-      val rs = ps.executeQuery()
-      if (rs.next()) {
-        result.put("name", rs.getString("name"))
+  def getSceneById(sceneId: Long): util.Map[String, AnyRef] = {
+    if (sceneCache.contains(sceneId) && 1 != 1) {
+      sceneCache.get(sceneId)
+    } else {
+      val conn = getConnection
+      try {
+        val scene = new QueryRunner().query(conn, s"select * from scene where scene_id = $sceneId", new MapHandler())
+        sceneCache.put(sceneId, scene)
+        scene
+      } finally {
+        conn.close()
       }
-      result
-    } finally {
-      conn.close()
     }
   }
 
-  def getSceneCellBySceneId(sceneId: Long): java.util.Collection[java.util.HashMap[String, Any]] = {
-    val conn = DBUtil.getConnection
-    try {
-      val sb = new StringBuilder(100);
-      sb append "select sc.*,c.character_id,c.name character_name from "
-      sb append "jh_scene_cell sc "
-      sb append "left join jh_scene_cell_character scc on sc.scene_cell_id = scc.scene_cell_id "
-      sb append "left join jh_character c on c.character_id = scc.character_id "
-      sb append "where sc.arrive = 1 and scene_id = ? order by c.character_id"
-      val ps = conn.prepareStatement(sb.toString)
-      ps.setLong(1, sceneId)
-      val rs = ps.executeQuery()
-      val map = new java.util.HashMap[Long, java.util.HashMap[String, Any]]()
-      while (rs.next()) {
-        val id = rs.getLong("scene_cell_id")
-        var temp = new java.util.HashMap[String, Any]()
-        if (map.containsKey(id)) {
-          temp = map.get(id)
-        } else {
-          temp.put("name", rs.getString("name"))
-          temp.put("desc", rs.getString("desc"))
-          val axisPoint = new java.util.HashMap[String, Any]()
-          axisPoint.put("x", rs.getInt("x"))
-          axisPoint.put("y", rs.getInt("y"))
-          temp.put("axisPoint", axisPoint)
-          temp.put("startPoint", rs.getBoolean("start_point"))
-          temp.put("npc", new java.util.ArrayList[java.util.HashMap[String, Any]]())
-          map.put(id, temp)
-        }
-        if (rs.getLong("character_id") != null) {
-          val list = temp.get("npc").asInstanceOf[java.util.ArrayList[java.util.HashMap[String, Any]]]
-          val npc = new java.util.HashMap[String, Any]()
-          npc.put("id", rs.getString("character_id"))
-          npc.put("name", rs.getString("character_name"))
-          list.add(npc)
-          temp.put("npc", list)
-        }
+  def getSceneCellBySceneId(sceneId: Long): util.List[util.Map[String, AnyRef]] = {
+    if (sceneCellCache.contains(sceneId) && 1 != 1) {
+      sceneCellCache.get(sceneId)
+    } else {
+      val conn = getConnection
+      try {
+        val sceneCells = new QueryRunner().query(conn, s"select * from scene_cell sc where sc.arrive = 1 and sc.scene_id = $sceneId", new MapListHandler())
+        sceneCellCache.put(sceneId, sceneCells)
+        sceneCells
+      } finally {
+        conn.close()
       }
-      map.values()
-    } finally {
-      conn.close()
     }
   }
 
   def getCharacterById(id: Long): util.Map[String, AnyRef] = {
-    val conn = DBUtil.getConnection
+    val conn = getConnection
     try {
-      val map = DSL.using(conn, SQLDialect.MYSQL)
-        .select()
-        .from("jh_character")
-        .where("character_id=" + id)
-        .fetchOneMap()
-      map.put("id", map.get("character_id"))
-      map
+      new QueryRunner().query(conn, s"select * from character where character_id = $id", new MapHandler())
     } finally {
       conn.close()
     }
-  }
-
-  //  def getCharacterById(id: Long): java.util.HashMap[String, Any] = {
-  //    val conn = DBUtil.getConnection
-  //    try {
-  //      val ps = conn.prepareStatement("select * from jh_character where character_id=?")
-  //      ps.setLong(1, id)
-  //      val rs = ps.executeQuery()
-  //      val map = new java.util.HashMap[String, Any]()
-  //      if (rs.next()) {
-  //        map.put("id", rs.getLong("character_id"))
-  //        map.put("name", rs.getString("name"))
-  //        map.put("desc", rs.getString("desc"))
-  //      }
-  //      map
-  //    } finally {
-  //      conn.close()
-  //    }
-  //  }
-
-  def getCharacterWord(id: Int): java.util.HashMap[String, String] = {
-    val conn = DBUtil.getConnection
-    val map = new java.util.HashMap[String, String]()
-    try {
-      val ps = conn.prepareStatement("select * from jh_character_word where character_id=? order by rand() limit 1")
-      ps.setLong(1, id)
-      val rs = ps.executeQuery()
-      if (rs.next()) {
-        map.put("word", rs.getString("word"))
-      }
-    } finally {
-      conn.close()
-    }
-    map
   }
 }
