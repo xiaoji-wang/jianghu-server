@@ -23,7 +23,7 @@ case class WorkerActor(ctx: ChannelHandlerContext) extends Actor {
   override def receive: Receive = {
     case data: (Int, JsonObject) => data._1 match {
       case Constant.GET_MAP => ctx.writeAndFlush(new TextWebSocketFrame(SceneHandle.getMap(1L)))
-      case Constant.NPC_SELECTED => ctx.writeAndFlush(new TextWebSocketFrame(NpcHandle.getNpc(data._2.get("id").getAsLong)))
+      case Constant.SELECTED_MAP => ctx.writeAndFlush(new TextWebSocketFrame(NpcHandle.getNpcByCell(data._2.get("id").getAsLong)))
     }
     case _ => ctx.writeAndFlush(new TextWebSocketFrame(""))
   }

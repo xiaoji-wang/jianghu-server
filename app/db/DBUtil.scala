@@ -46,7 +46,7 @@ object DBUtil {
     } else {
       val conn = getConnection
       try {
-        val sceneCells = new QueryRunner().query(conn, s"select * from scene_cell sc where sc.arrive = 1 and sc.scene_id = $sceneId", new MapListHandler())
+        val sceneCells = new QueryRunner().query(conn, s"select * from scene_cell sc where sc.scene_id = $sceneId", new MapListHandler())
         sceneCellCache.put(sceneId, sceneCells)
         sceneCells
       } finally {
@@ -55,10 +55,10 @@ object DBUtil {
     }
   }
 
-  def getCharacterById(id: Long): util.Map[String, AnyRef] = {
+  def getNpcByCell(cellId: Long): util.List[util.Map[String, AnyRef]] = {
     val conn = getConnection
     try {
-      new QueryRunner().query(conn, s"select * from character where character_id = $id", new MapHandler())
+      new QueryRunner().query(conn, s"select * from npc where scene_cell_id = $cellId", new MapListHandler())
     } finally {
       conn.close()
     }

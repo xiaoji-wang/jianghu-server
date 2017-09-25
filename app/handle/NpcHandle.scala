@@ -7,7 +7,7 @@ import db.DBUtil
   * Created by wxji on 2017-09-22.
   */
 object NpcHandle {
-  def getNpc(npcId: Long): String = {
-    new Gson().toJson(DBUtil.getCharacterById(npcId))
+  def getNpcByCell(cellId: Long): String = {
+    new Gson().toJson(DBUtil.getNpcByCell(cellId))
   }
 }
