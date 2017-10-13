@@ -1,10 +1,11 @@
 package db
 
-import java.sql.{Connection, DriverManager}
+import java.io.InputStream
+import java.nio.file.{Files, Paths}
 import java.util
-import java.util.concurrent.ConcurrentHashMap
+import java.util.Properties
 
-import com.typesafe.config.ConfigFactory
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import org.apache.commons.dbutils.QueryRunner
 import org.apache.commons.dbutils.handlers.{MapHandler, MapListHandler}
 
@@ -14,49 +15,37 @@ import org.apache.commons.dbutils.handlers.{MapHandler, MapListHandler}
   */
 object DBUtil {
 
-  private val config = ConfigFactory.load("application.conf").getConfig("db.default")
-  private val sceneCache = new ConcurrentHashMap[Long, util.Map[String, AnyRef]]()
-  private val sceneCellCache = new ConcurrentHashMap[Long, util.List[util.Map[String, AnyRef]]]()
-  private val characterCache = new ConcurrentHashMap[Long, util.List[util.Map[String, AnyRef]]]()
+  val in: InputStream = Files.newInputStream(Paths.get("conf/hikari.properties"))
+  val properties = new Properties()
+  properties.load(in)
+  in.close()
 
-  Class.forName(config.getString("driver"))
-
-  private def getConnection: Connection = {
-    DriverManager.getConnection(config.getString("url"), config.getString("username"), config.getString("password"))
-  }
+  val dataSource: HikariDataSource = new HikariDataSource(new HikariConfig(properties))
 
   def getSceneById(sceneId: Long): util.Map[String, AnyRef] = {
-    if (sceneCache.contains(sceneId) && 1 != 1) {
-      sceneCache.get(sceneId)
-    } else {
-      val conn = getConnection
-      try {
-        val scene = new QueryRunner().query(conn, s"select * from scene where scene_id = $sceneId", new MapHandler())
-        sceneCache.put(sceneId, scene)
-        scene
-      } finally {
-        conn.close()
-      }
+    val conn = dataSource.getConnection
+    try {
+      val scene = new QueryRunner().query(conn, s"select * from scene where scene_id = $sceneId", new MapHandler())
+      scene
+    } finally {
+      conn.close()
     }
   }
 
   def getSceneCellBySceneId(sceneId: Long): util.List[util.Map[String, AnyRef]] = {
-    if (sceneCellCache.contains(sceneId) && 1 != 1) {
-      sceneCellCache.get(sceneId)
-    } else {
-      val conn = getConnection
-      try {
-        val sceneCells = new QueryRunner().query(conn, s"select * from scene_cell sc where sc.scene_id = $sceneId", new MapListHandler())
-        sceneCellCache.put(sceneId, sceneCells)
-        sceneCells
-      } finally {
-        conn.close()
-      }
+    val conn = dataSource.getConnection
+    try {
+      val start = System.currentTimeMillis()
+      val sceneCells = new QueryRunner().query(conn, s"select * from scene_cell sc where sc.scene_id = $sceneId", new MapListHandler())
+      println("query scene cell time:" + (System.currentTimeMillis() - start) / 1000 + "s")
+      sceneCells
+    } finally {
+      conn.close()
     }
   }
 
   def getNpcByCell(cellId: Long): util.List[util.Map[String, AnyRef]] = {
-    val conn = getConnection
+    val conn = dataSource.getConnection
     try {
       new QueryRunner().query(conn, s"select * from npc where scene_cell_id = $cellId", new MapListHandler())
     } finally {

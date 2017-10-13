@@ -25,4 +25,7 @@ libraryDependencies += "com.google.code.gson" % "gson" % "2.8.1"
 // https://mvnrepository.com/artifact/commons-dbutils/commons-dbutils
 libraryDependencies += "commons-dbutils" % "commons-dbutils" % "1.7"
 
+// https://mvnrepository.com/artifact/com.zaxxer/HikariCP
+libraryDependencies += "com.zaxxer" % "HikariCP" % "2.7.1"
+
 fork in run := false
