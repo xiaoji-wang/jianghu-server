@@ -35,9 +35,7 @@ object DBUtil {
   def getSceneCellBySceneId(sceneId: Long): util.List[util.Map[String, AnyRef]] = {
     val conn = dataSource.getConnection
     try {
-      val start = System.currentTimeMillis()
       val sceneCells = new QueryRunner().query(conn, s"select * from scene_cell sc where sc.scene_id = $sceneId", new MapListHandler())
-      println("query scene cell time:" + (System.currentTimeMillis() - start) / 1000 + "s")
       sceneCells
     } finally {
       conn.close()
@@ -48,6 +46,16 @@ object DBUtil {
     val conn = dataSource.getConnection
     try {
       new QueryRunner().query(conn, s"select * from npc where scene_cell_id = $cellId", new MapListHandler())
+    } finally {
+      conn.close()
+    }
+  }
+
+  def getNpcById(id: Long): util.Map[String, AnyRef] = {
+    val conn = dataSource.getConnection
+    try {
+      val scene = new QueryRunner().query(conn, s"select * from npc where npc_id = $id", new MapHandler())
+      scene
     } finally {
       conn.close()
     }

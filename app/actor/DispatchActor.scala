@@ -24,6 +24,7 @@ case class WorkerActor(ctx: ChannelHandlerContext) extends Actor {
     case data: (Int, JsonObject) => data._1 match {
       case Constant.GET_MAP => ctx.writeAndFlush(new TextWebSocketFrame(SceneHandle.getMap(1L)))
       case Constant.SELECTED_MAP => ctx.writeAndFlush(new TextWebSocketFrame(NpcHandle.getNpcByCell(data._2.get("id").getAsLong)))
+      case Constant.SELECTED_NPC => ctx.writeAndFlush(new TextWebSocketFrame(NpcHandle.getNpcId(data._2.get("id").getAsLong)))
     }
     case _ => ctx.writeAndFlush(new TextWebSocketFrame(""))
   }

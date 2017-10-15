@@ -10,4 +10,8 @@ object NpcHandle {
   def getNpcByCell(cellId: Long): String = {
     new Gson().toJson(DBUtil.getNpcByCell(cellId))
   }
+
+  def getNpcId(id: Long): String = {
+    new Gson().toJson(DBUtil.getNpcById(id))
+  }
 }
