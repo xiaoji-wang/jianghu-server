@@ -1,7 +1,5 @@
 package db
 
-import java.io.InputStream
-import java.nio.file.{Files, Paths}
 import java.util
 import java.util.Properties
 
@@ -15,7 +13,7 @@ import org.apache.commons.dbutils.handlers.{MapHandler, MapListHandler}
   */
 object DBUtil {
 
-  val in: InputStream = Files.newInputStream(Paths.get("conf/hikari.properties"))
+  val in = getClass.getClassLoader.getResourceAsStream("hikari.properties")
   val properties = new Properties()
   properties.load(in)
   in.close()
@@ -35,7 +33,26 @@ object DBUtil {
   def getSceneCellBySceneId(sceneId: Long): util.List[util.Map[String, AnyRef]] = {
     val conn = dataSource.getConnection
     try {
-      val sceneCells = new QueryRunner().query(conn, s"select * from scene_cell sc where sc.scene_id = $sceneId", new MapListHandler())
+      val sceneCells = new QueryRunner().query(conn,
+        s"select " +
+          s"scene_cell_id id," +
+          s"name," +
+          s"description description," +
+          s"east_id eId," +
+          s"east_out eOut," +
+          s"south_east_id seId," +
+          s"south_east_out seOut," +
+          s"south_west_id swId," +
+          s"south_west_out swOut," +
+          s"west_id wId," +
+          s"west_out wOut," +
+          s"north_east_id neId," +
+          s"north_east_out neOut," +
+          s"north_west_id nwId," +
+          s"north_west_out nwOut," +
+          s"x," +
+          s"y " +
+          s"from scene_cell sc where sc.scene_id = $sceneId", new MapListHandler())
       sceneCells
     } finally {
       conn.close()
@@ -45,7 +62,7 @@ object DBUtil {
   def getNpcByCell(cellId: Long): util.List[util.Map[String, AnyRef]] = {
     val conn = dataSource.getConnection
     try {
-      new QueryRunner().query(conn, s"select * from npc where scene_cell_id = $cellId", new MapListHandler())
+      new QueryRunner().query(conn, s"select npc_id id,name from npc where scene_cell_id = $cellId", new MapListHandler())
     } finally {
       conn.close()
     }
