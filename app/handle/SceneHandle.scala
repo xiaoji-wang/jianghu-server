@@ -14,8 +14,11 @@ object SceneHandle {
   def getMap(sceneId: Long): String = {
     val scene = DBUtil.getSceneById(sceneId)
     val sceneCell: util.List[util.Map[String, AnyRef]] = DBUtil.getSceneCellBySceneId(sceneId)
+
     val multiDimArr = Array.ofDim[util.Map[String, AnyRef]](scene("height").asInstanceOf[Int], scene("width").asInstanceOf[Int])
-    sceneCell.foreach((x: util.Map[String, AnyRef]) => multiDimArr(x("y").asInstanceOf[Int])(x("x").asInstanceOf[Int]) = x)
+
+    sceneCell.foreach((c: util.Map[String, AnyRef]) => multiDimArr(c("y").asInstanceOf[Int])(c("x").asInstanceOf[Int]) = c)
+
     new Gson().toJson(mapAsJavaMap(Map("name" -> scene.get("name"), "cells" -> multiDimArr)))
   }
 }
